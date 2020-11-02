@@ -9,12 +9,17 @@
     <title>@yield('title')</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
     @yield('css')
+    <style>
+        a.btn{
+            color:white;
+        }
+    </style>
 </head>
 <body>
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand" href="home">
+                <a class="navbar-brand" href="{{route('welcome')}}">
                     Blog
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
@@ -46,6 +51,9 @@
                                 </a>
 
                                 <div class="dropdown-menu " aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('users.edit-profile') }}">
+                                        My Profile
+                                    </a>
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
@@ -70,6 +78,11 @@
                     {{session()->get('success')}}
                 </div>
             @endif
+            @if(session()->has('error'))
+                <div class="alert alert-danger">
+                    {{session()->get('error')}}
+                </div>
+            @endif
 
 
             @auth
@@ -77,11 +90,19 @@
                 <div class="row">
                     <div class="com-md-4">
                         <ul class="list-group">
+                            @if(auth()->user()->isAdmin())
+                                <li class="list-group-item ">
+                                    <a href='{{route("users.index")}}'>Users</a>
+                                </li>
+                            @endif
                             <li class="list-group-item ">
                                 <a href='{{route("posts.index")}}'>Posts</a>
                             </li>
                             <li class="list-group-item">
                                 <a href='{{route("categories.index")}}'>Categories</a>
+                            </li>
+                            <li class="list-group-item">
+                                <a href='{{route("tags.index")}}'>Tags</a>
                             </li>
                         </ul>
                         <ul class="list-group mt-5">

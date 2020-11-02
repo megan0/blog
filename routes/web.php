@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,16 +12,38 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('welcome');
+
+Route::get('/show/{post}', [App\Http\Controllers\Blog\PostController::class, 'show'])->name('blog.show');
+
+Route::get('blog/categories/{category}', [App\Http\Controllers\Blog\PostController::class, 'category'])->name('blog.category');
+
+Route::get('blog/tags/{tag}', [App\Http\Controllers\Blog\PostController::class, 'tag'])->name('blog.tag');
+
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::resource('categories',App\Http\Controllers\CategotiesController::class);
 
-Route::resource('posts',App\Http\Controllers\PostsController::class);
+Route::middleware(['auth'])->group(function(){
 
-Route::get('trashed-posts', [App\Http\Controllers\PostsController::class, 'trashed'])->name('trashed-posts.index');
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+    Route::resource('categories',App\Http\Controllers\CategotiesController::class);
+
+    Route::resource('tags',App\Http\Controllers\TagsController::class);
+
+    Route::resource('posts',App\Http\Controllers\PostsController::class);
+
+    Route::get('trashed-posts', [App\Http\Controllers\PostsController::class, 'trashed'])->name('trashed-posts.index');
+
+    Route::put('restore-post/{post}',[App\Http\Controllers\PostsController::class, 'restore'])->name('restore-post');
+
+});
+
+Route::middleware(['auth','admin'])->group(function(){
+    Route::get('users/profile',[App\Http\Controllers\UsersController::class, 'edit'])->name('users.edit-profile');
+    Route::put('users/profile',[App\Http\Controllers\UsersController::class, 'update'])->name('users.update-profile');
+    Route::get('users',[App\Http\Controllers\UsersController::class, 'index'])->name('users.index');
+    Route::post('users/{user}/make-admin', [App\Http\Controllers\UsersController::class, 'makeAdmin'])->name('users.make-admin');
+});

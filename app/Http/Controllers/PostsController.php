@@ -6,10 +6,17 @@ use Illuminate\Http\Request;
 use App\Http\Requests\Posts\CreatePostRequest;
 use App\Http\Requests\Posts\UpdatePostRequest;
 use App\Models\Post;
+use App\Models\Category;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Middleware\VerifyCategoriesCount;
+use App\Models\Tag;
 
 class PostsController extends Controller
 {
+    public function __construct(){
+        $this->middleware(VerifyCategoriesCount::class)->only(['create','store']);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -27,7 +34,7 @@ class PostsController extends Controller
      */
     public function create()
     {
-        return view('posts.create');
+        return view('posts.create')->with('categories',Category::all())->with('tags',Tag::all());
     }
 
     /**
@@ -40,13 +47,19 @@ class PostsController extends Controller
     {
         $image=$request->image->store('posts');
 
-        Post::create([
+        $post=Post::create([
             'title'=>$request->title,
             'description'=>$request->description,
             'content'=>$request->content,
             'published_at'=>$request->published_at,
-            'image'=>$image
+            'user_id'=>auth()->user()->id,
+            'image'=>$image,
+            'category_id'=>$request->category
         ]);
+
+        if($request->tags){
+            $post->tags()->attach($request->tags);
+        }
 
 
         session()->flash('success','Post Created.');
@@ -73,7 +86,7 @@ class PostsController extends Controller
      */
     public function edit(Post $post)
     {
-        return view('posts.create')->with('post', $post);
+        return view('posts.create')->with('post', $post)->with('categories',Category::all())->with('tags',Tag::all());
     }
 
     /**
@@ -89,12 +102,18 @@ class PostsController extends Controller
 
         if($request->hasFile('image')){
 
-            Storage::delete($post->image);
+            $post->deleteImage();
 
             $image=$request->image->store('posts');
             $data['image']=$image;
 
         }
+
+        if($request->tags){
+            $post->tags()->sync($request->tags);
+        }
+
+
         $post->update($data);
 
         session()->flash('success','Post Updated.');
@@ -113,7 +132,7 @@ class PostsController extends Controller
         $post=Post::withTrashed()->where('id',$id)->first();
 
         if($post->trashed()){
-            Storage::delete($post->image);
+            $post->deleteImage();
             $post->forceDelete();
         }
         else{
@@ -139,5 +158,12 @@ class PostsController extends Controller
 
         return view('posts.index')->withPosts($trashed);
 
+    }
+
+    public function restore($id){
+        $post=Post::withTrashed()->where('id',$id)->first();
+        $post->restore();
+        session()->flash('success','Post Restored.');
+        return redirect(route('posts.index'));
     }
 }

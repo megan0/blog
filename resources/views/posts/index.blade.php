@@ -17,6 +17,7 @@
                 <thead>
                     <th>Image</th>
                     <th>Title</th>
+                    <th>Category</th>
                     <th></th>
                     <th></th>
                 </thead>
@@ -29,11 +30,24 @@
                             <td>
                                 {{$post->title}}
                             </td>
+                            <td>
+                                {{$post->category->name}}
+                            </td>
                             @if(!$post->trashed())
                                 <td>
                                     <a href="{{route('posts.edit',$post->id)}}" class="btn btn-info btn-sm">Edit</a>
                                 </td>
+                            @else
+                                <td>
+                                    <form action="{{ route('restore-post',$post->id) }}" method='POST'>
+                                        @csrf
+
+                                        @method('PUT')
+                                        <button type='submit' class="btn btn-info btn-sm">Restore</button>
+                                    </form>
+                                </td>
                             @endif
+                            
                             <td>
                                 <form action="{{route('posts.destroy',$post->id)}}" method='POST'>
                                     @csrf
